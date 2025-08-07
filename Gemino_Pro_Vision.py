@@ -31,7 +31,17 @@ if "app_key" not in st.session_state:
 
 try:
     genai.configure(api_key = st.session_state.app_key)
-    model = genai.GenerativeModel('gemini-pro-vision')
+    # Try different available models for vision tasks
+    try:
+        model = genai.GenerativeModel('gemini-2.5-pro')
+        st.info("Using Gemini 2.5 Pro model")
+    except:
+        try:
+            model = genai.GenerativeModel('gemini-2.5-flash')
+            st.info("Using Gemini 2.5 Flash model")
+        except:
+            model = genai.GenerativeModel('gemini-pro')
+            st.warning("Using Gemini Pro model (may have limited vision capabilities)")
 except AttributeError as e:
     st.warning("Please Put Your Gemini App Key First.")
 
@@ -80,7 +90,12 @@ Please provide a professional and detailed analysis report.
         st.exception(e)
         return None
     except Exception as e:
-        st.exception(e)
+        # Handle model not found or other API errors
+        if "models/" in str(e) and "is not found" in str(e):
+            st.error("❌ Model not available. The Gemini vision model may have been updated. Please check the Google AI documentation for current model names.")
+            st.info("💡 Try updating your google-generativeai package: `pip install --upgrade google-generativeai`")
+        else:
+            st.exception(e)
         return None
     message_placeholder.markdown(full_response)
     return full_response
