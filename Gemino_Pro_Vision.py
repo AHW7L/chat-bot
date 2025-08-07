@@ -15,10 +15,19 @@ st.set_page_config(
 
 st.title('Cryptocurrency Data Visualization Analyst')
 
+# Try to get API key from secrets first, then from user input
 if "app_key" not in st.session_state:
-    app_key = st.text_input("Your Gemini App Key", type='password')
-    if app_key:
+    try:
+        # Try to get API key from Streamlit secrets
+        app_key = st.secrets["GEMINI_API_KEY"]
         st.session_state.app_key = app_key
+        st.success("API Key loaded from secrets successfully!")
+    except (KeyError, FileNotFoundError):
+        # If not found in secrets, ask user to input
+        app_key = st.text_input("Your Gemini App Key", type='password', 
+                               help="Enter your Gemini API key or configure it in .streamlit/secrets.toml")
+        if app_key:
+            st.session_state.app_key = app_key
 
 try:
     genai.configure(api_key = st.session_state.app_key)
