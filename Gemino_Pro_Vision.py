@@ -74,29 +74,53 @@ Please provide a professional and detailed analysis report.
     message_placeholder = st.empty()
     message_placeholder.markdown("Analyzing image...")
     full_response = ""
+    
     try:
-        for chunk in model.generate_content([enhanced_prompt, image], stream = True, safety_settings = SAFETY_SETTTINGS):                   
-            word_count = 0
-            random_int = random.randint(5, 10)
-            for word in chunk.text:
-                full_response += word
-                word_count += 1
-                if word_count == random_int:
-                    time.sleep(0.05)
-                    message_placeholder.markdown(full_response + "_")
-                    word_count = 0
-                    random_int = random.randint(5, 10)
-    except genai.types.generation_types.BlockedPromptException as e:
-        st.exception(e)
-        return None
-    except Exception as e:
-        # Handle model not found or other API errors
-        if "models/" in str(e) and "is not found" in str(e):
-            st.error("❌ Model not available. The Gemini vision model may have been updated. Please check the Google AI documentation for current model names.")
+        # Try streaming first
+        response_iterator = model.generate_content([enhanced_prompt, image], stream=True, safety_settings=SAFETY_SETTTINGS)
+        
+        for chunk in response_iterator:
+            if hasattr(chunk, 'text') and chunk.text:
+                word_count = 0
+                random_int = random.randint(5, 10)
+                for word in chunk.text:
+                    full_response += word
+                    word_count += 1
+                    if word_count == random_int:
+                        time.sleep(0.05)
+                        message_placeholder.markdown(full_response + "_")
+                        word_count = 0
+                        random_int = random.randint(5, 10)
+    
+    except (StopIteration, Exception) as e:
+        # If streaming fails, try non-streaming approach
+        if "StopIteration" in str(type(e)) or isinstance(e, StopIteration):
+            message_placeholder.markdown("Switching to non-streaming mode...")
+            try:
+                response = model.generate_content([enhanced_prompt, image], stream=False, safety_settings=SAFETY_SETTTINGS)
+                if hasattr(response, 'text') and response.text:
+                    full_response = response.text
+                else:
+                    st.error("❌ No response generated. The image might not be processable or the prompt was blocked.")
+                    return None
+            except Exception as non_stream_error:
+                st.error("❌ Both streaming and non-streaming failed.")
+                st.exception(non_stream_error)
+                return None
+        
+        elif "models/" in str(e) and "is not found" in str(e):
+            st.error("❌ Model not available. Please check the Google AI documentation for current model names.")
             st.info("💡 Try updating your google-generativeai package: `pip install --upgrade google-generativeai`")
+            return None
+        
+        elif hasattr(e, '__class__') and 'BlockedPromptException' in str(e.__class__):
+            st.error("❌ Content was blocked by safety filters. Try rephrasing your prompt.")
+            return None
+        
         else:
+            st.error("❌ An unexpected error occurred:")
             st.exception(e)
-        return None
+            return None
     message_placeholder.markdown(full_response)
     return full_response
 
