@@ -5,7 +5,7 @@
 ## Running Locally
 ```python
 pip install -r requirements.txt
-streamlit run 1_Gemini_Pro.py
+streamlit run Gemini_Pro_Vision.py
 ```
 
 
