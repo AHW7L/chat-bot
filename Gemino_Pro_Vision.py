@@ -49,26 +49,25 @@ except AttributeError as e:
 def analyze_image(prompt, image):
     # Add professional prompts for cryptocurrency data analysis charts
     enhanced_prompt = f"""
-As a professional cryptocurrency data analyst and data visualization expert, please analyze this image.
+As a professional cryptocurrency data analyst, analyze this image concisely and academically.
 
-If the image contains any of the following chart types, please provide detailed professional analysis:
+CRITICAL: Limit your response to exactly 5 key points, each point should be ONE sentence only.
 
-1. **Sentiment Analysis Heatmap**: Analyze market sentiment distribution, hotspot areas, sentiment intensity changes
-2. **Confusion Matrix**: Interpret classification accuracy, precision, recall, F1-score and other metrics
-3. **Gauge Dashboard**: Analyze current indicator values, threshold settings, risk levels
-4. **Histogram Groups**: Analyze data distribution, frequency, statistical characteristics, outliers
-5. **Line Chart (Time Series)**: Analyze trends, seasonality, volatility, key time points
+For different chart types, focus on:
 
-Please analyze from the following perspectives:
-- Chart type identification and data structure
-- Key numerical values and statistical indicators
-- Trend and pattern recognition
-- Outliers or important observations
-- Significance and recommendations for cryptocurrency markets
+**Sentiment Analysis Heatmap**: 1) Dominant sentiment zones, 2) Intensity distribution patterns, 3) Temporal sentiment shifts, 4) Correlation with market events, 5) Investment implications.
+
+**Confusion Matrix**: 1) Overall classification accuracy, 2) Precision/recall for each class, 3) Most common misclassification patterns, 4) Model performance strengths, 5) Recommended improvements.
+
+**Gauge Dashboard**: 1) Current indicator reading and position, 2) Risk zone assessment, 3) Threshold breach probability, 4) Historical context comparison, 5) Action recommendations.
+
+**Histogram Groups**: 1) Distribution shape and skewness, 2) Central tendency measures, 3) Outlier identification, 4) Statistical significance, 5) Market behavior insights.
+
+**Time Series**: 1) Primary trend direction, 2) Volatility patterns, 3) Seasonal/cyclical components, 4) Anomaly detection, 5) Forecast implications.
 
 User question: {prompt}
 
-Please provide a professional and detailed analysis report.
+Provide exactly 5 bullet points, each containing ONE precise academic sentence.
 """
     
     message_placeholder = st.empty()
