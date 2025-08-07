@@ -156,30 +156,71 @@ if "app_key" in st.session_state:
     st.write("**Quick Analysis Options:**")
     col1, col2, col3 = st.columns(3)
     
+    # Use session state to track if analysis should run
+    if "run_analysis" not in st.session_state:
+        st.session_state.run_analysis = False
+    
     with col1:
         if st.button("📊 Comprehensive Analysis", help="Perform comprehensive professional analysis of the chart"):
             if image is not None:
                 prompt = "Please provide a comprehensive professional analysis of this cryptocurrency data chart"
+                st.session_state.current_prompt = prompt
+                st.session_state.run_analysis = True
             
     with col2:
         if st.button("📈 Trend Analysis", help="Focus on analyzing data trends and patterns"):
             if image is not None:
                 prompt = "Please focus on analyzing trends, patterns and key change points in the chart"
+                st.session_state.current_prompt = prompt
+                st.session_state.run_analysis = True
     
     with col3:
         if st.button("⚠️ Risk Assessment", help="Analyze from risk management perspective"):
             if image is not None:
                 prompt = "Please analyze this chart from risk management and investment decision perspective"
+                st.session_state.current_prompt = prompt
+                st.session_state.run_analysis = True
     
-    if st.button("🔍 Start Analysis", type="primary", disabled=(image is None)) or prompt:
+    # Manual analysis button
+    if st.button("🔍 Start Analysis", type="primary", disabled=(image is None)):
         if image is None:
             st.warning("Please upload a chart image first", icon="⚠️")
         elif not prompt.strip():
             st.warning("Please enter an analysis question or select a quick analysis option", icon="⚠️")
         else:
+            st.session_state.current_prompt = prompt
+            st.session_state.run_analysis = True
+    
+    # Run analysis if triggered
+    if st.session_state.run_analysis and image is not None:
+        current_prompt = st.session_state.get("current_prompt", prompt)
+        if current_prompt and current_prompt.strip():
             with st.container():
                 st.write("**Analysis Question:**")
-                st.write(prompt)
+                st.write(current_prompt)
                 st.divider()
                 st.write("**AI Professional Analysis:**")
-                analyze_image(prompt, resized_img)
+                
+                # Run the analysis
+                result = analyze_image(current_prompt, resized_img)
+                
+                # Reset the flag after analysis
+                st.session_state.run_analysis = False
+                
+                # Store the result in session state to prevent disappearing
+                if result:
+                    st.session_state.last_analysis = {
+                        "question": current_prompt,
+                        "result": result
+                    }
+        else:
+            st.session_state.run_analysis = False
+    
+    # Display last analysis if no new analysis is running
+    elif "last_analysis" in st.session_state and not st.session_state.run_analysis:
+        with st.expander("📋 Last Analysis Result", expanded=True):
+            st.write("**Question:**")
+            st.write(st.session_state.last_analysis["question"])
+            st.divider()
+            st.write("**Analysis:**")
+            st.markdown(st.session_state.last_analysis["result"])
